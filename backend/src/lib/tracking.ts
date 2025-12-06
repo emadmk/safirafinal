@@ -41,15 +41,18 @@ export const getClientIP = (req: NextApiRequest): string => {
   return req.socket?.remoteAddress || 'unknown';
 };
 
-// Parse UTM parameters from query
-export const parseUTMParams = (query: any) => {
+// Parse UTM parameters from query or body
+export const parseUTMParams = (query: any, body?: any) => {
+  const source = query || {};
+  const bodySource = body || {};
+
   return {
-    utmSource: query.utm_source || query.ref || null,
-    utmMedium: query.utm_medium || null,
-    utmCampaign: query.utm_campaign || null,
-    utmContent: query.utm_content || null,
-    utmTerm: query.utm_term || null,
-    referralCode: query.ref || query.referral || null,
+    utmSource: source.utm_source || source.ref || bodySource.utm_source || bodySource.ref || null,
+    utmMedium: source.utm_medium || bodySource.utm_medium || null,
+    utmCampaign: source.utm_campaign || bodySource.utm_campaign || null,
+    utmContent: source.utm_content || bodySource.utm_content || null,
+    utmTerm: source.utm_term || bodySource.utm_term || null,
+    referralCode: source.ref || source.referral || bodySource.ref || bodySource.referral || null,
   };
 };
 
@@ -98,7 +101,7 @@ export const trackEvent = async (params: TrackEventParams) => {
 
   const userAgent = req.headers['user-agent'] || '';
   const deviceInfo = parseUserAgent(userAgent);
-  const utmParams = parseUTMParams(req.query);
+  const utmParams = parseUTMParams(req.query, req.body);
   const visitorId = generateVisitorId(req);
   const ipAddress = getClientIP(req);
 

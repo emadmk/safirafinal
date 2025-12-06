@@ -15,7 +15,7 @@ import {
 import toast from 'react-hot-toast'
 import { useAuthStore } from '../store/authStore'
 import api from '../lib/api'
-import { trackEvent } from '../lib/tracking'
+import { trackEvent, initTracking } from '../lib/tracking'
 
 interface InvestForm {
   firstName: string
@@ -47,6 +47,11 @@ const Invest = () => {
       postalCode: user?.postalCode || '',
     }
   })
+
+  useEffect(() => {
+    // Initialize tracking when page loads
+    initTracking()
+  }, [])
 
   useEffect(() => {
     if (isAuthenticated && step === 1) {
