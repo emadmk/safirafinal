@@ -90,30 +90,30 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     // Get sellers (users with referral traffic)
     const sellersData = await prisma.trackingEvent.groupBy({
       by: ['utmSource'],
-      _count: { _all: true },
+      _count: { utmSource: true },
       where: {
         utmSource: { not: null },
       },
-      orderBy: { _count: { _all: 'desc' } },
+      orderBy: { _count: { utmSource: 'desc' } },
       take: 10,
     });
 
     // Get sales count per referral code
     const salesByRef = await prisma.sale.groupBy({
       by: ['referralCode'],
-      _count: { _all: true },
+      _count: { referralCode: true },
       where: {
         referralCode: { not: null },
         paymentStatus: 'FINISHED',
       },
     });
 
-    const salesMap = new Map(salesByRef.map(s => [s.referralCode, s._count._all]));
+    const salesMap = new Map(salesByRef.map(s => [s.referralCode, s._count.referralCode]));
 
     const sellers = sellersData.map(s => ({
       referralCode: s.utmSource,
       name: s.utmSource,
-      visits: s._count._all,
+      visits: s._count.utmSource,
       sales: salesMap.get(s.utmSource) || 0,
     }));
 
