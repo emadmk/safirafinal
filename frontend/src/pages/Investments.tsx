@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Gift, ArrowRight, CheckCircle } from 'lucide-react'
+import { Gift, ArrowRight, CheckCircle, Zap } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../lib/api'
 import { Investment } from '../types'
@@ -47,8 +47,12 @@ const Investments = () => {
           <h1 className="text-2xl font-bold text-white mb-2">My Investments</h1>
           <p className="text-gray-400">Track all your investment progress</p>
         </div>
-        <Link to="/invest" className="btn-primary">
-          New Investment
+        <Link
+          to="/invest"
+          className="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-primary-400 to-primary-500 hover:from-primary-500 hover:to-primary-600 text-dark-900 font-semibold rounded-xl shadow-lg shadow-primary-400/25 hover:shadow-primary-400/40 transition-all duration-300 hover:-translate-y-0.5"
+        >
+          <Zap className="mr-2 w-5 h-5" />
+          Double It Now
           <ArrowRight className="ml-2 w-5 h-5" />
         </Link>
       </div>

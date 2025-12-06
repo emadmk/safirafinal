@@ -81,8 +81,11 @@ const Tickets = () => {
           <h1 className="text-2xl font-bold text-white mb-2">Support Tickets</h1>
           <p className="text-gray-400">Get help with your investments</p>
         </div>
-        <button onClick={() => setShowNewTicket(true)} className="btn-primary">
-          <Plus className="w-4 h-4 mr-2" />
+        <button
+          onClick={() => setShowNewTicket(true)}
+          className="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-primary-400 to-primary-500 hover:from-primary-500 hover:to-primary-600 text-dark-900 font-semibold rounded-xl shadow-lg shadow-primary-400/25 hover:shadow-primary-400/40 transition-all duration-300 hover:-translate-y-0.5"
+        >
+          <Plus className="w-5 h-5 mr-2" />
           New Ticket
         </button>
       </div>

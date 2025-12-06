@@ -22,7 +22,7 @@ const CountdownTimer = () => {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
 
   useEffect(() => {
-    const targetDate = new Date('2024-12-31T23:59:59').getTime()
+    const targetDate = new Date('2025-12-31T23:59:59').getTime()
 
     const timer = setInterval(() => {
       const now = new Date().getTime()
@@ -70,12 +70,12 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-dark-900">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 md:h-20 overflow-hidden">
-            <Link to="/" className="flex items-center space-x-2 flex-shrink-0">
-              <img src="/logo.png" alt="Safira" className="w-10 h-10 md:w-12 md:h-12 object-contain" />
-              <span className="text-xl md:text-2xl font-luxury font-semibold tracking-wider gold-text">SAFIRALUX</span>
+      <nav className="fixed top-0 left-0 right-0 z-50 glass">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 md:h-20">
+            <Link to="/" className="flex items-center space-x-1.5 sm:space-x-2 flex-shrink-0 min-w-0">
+              <img src="/logo.png" alt="Safira" className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 object-contain flex-shrink-0" />
+              <span className="text-base sm:text-xl md:text-2xl font-luxury font-semibold tracking-wider gold-text truncate">SAFIRALUX</span>
             </Link>
             <div className="hidden md:flex items-center space-x-8">
               <a href="#how-it-works" className="text-gray-300 hover:text-primary-400 transition-colors">How It Works</a>
@@ -93,14 +93,14 @@ const Landing = () => {
               ) : (
                 <>
                   <Link to="/login" className="text-primary-400 hover:text-primary-300 transition-colors">Login</Link>
-                  <Link to="/invest" className="btn-primary text-sm">Start Investing</Link>
+                  <Link to="/invest" className="btn-primary text-sm">Double It Now</Link>
                 </>
               )}
             </div>
             {user ? (
-              <Link to="/dashboard" className="md:hidden btn-primary text-sm px-3 py-2 whitespace-nowrap flex-shrink-0">Dashboard</Link>
+              <Link to="/dashboard" className="md:hidden btn-primary text-xs px-2.5 py-1.5 whitespace-nowrap flex-shrink-0">Dashboard</Link>
             ) : (
-              <Link to="/invest" className="md:hidden btn-primary text-sm px-4 py-2 whitespace-nowrap flex-shrink-0">Invest</Link>
+              <Link to="/invest" className="md:hidden btn-primary text-xs px-3 py-1.5 whitespace-nowrap flex-shrink-0">Invest</Link>
             )}
           </div>
         </div>
@@ -134,7 +134,7 @@ const Landing = () => {
             transition={{ duration: 0.8 }}
           >
             <span className="inline-block px-4 py-2 rounded-full bg-primary-400/10 border border-primary-400/30 text-primary-400 text-sm font-medium mb-6">
-              Limited Time Offer - Ends December 31st
+              Limited Time Offer - Ends 2025
             </span>
 
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-bold leading-tight mb-6">
@@ -163,9 +163,9 @@ const Landing = () => {
               </motion.div>
               <div className="relative">
                 <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-green-400/20 to-green-500/20 border-2 border-green-400/50 flex items-center justify-center animate-pulse">
-                  <span className="text-3xl md:text-5xl font-bold text-green-400">$350</span>
+                  <span className="text-3xl md:text-5xl font-bold text-green-400">$250</span>
                 </div>
-                <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-bold">+250%</span>
+                <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-bold">+150%</span>
               </div>
             </motion.div>
 
@@ -355,8 +355,8 @@ const Landing = () => {
           <div className="max-w-4xl mx-auto">
             {/* Timeline */}
             <div className="relative">
-              {/* Line */}
-              <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-primary-400/20 -translate-x-1/2" />
+              {/* Line - hidden on mobile */}
+              <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-0.5 bg-primary-400/20 -translate-x-1/2" />
 
               {[
                 {
@@ -401,7 +401,7 @@ const Landing = () => {
                       <p className="text-gray-400">{item.content}</p>
                     </div>
                   </div>
-                  <div className="absolute left-1/2 -translate-x-1/2 w-4 h-4 bg-primary-400 rounded-full border-4 border-dark-900" />
+                  <div className="hidden md:block absolute left-1/2 -translate-x-1/2 w-4 h-4 bg-primary-400 rounded-full border-4 border-dark-900 z-10" />
                 </motion.div>
               ))}
             </div>
@@ -502,7 +502,8 @@ const Landing = () => {
 
               <div className="mt-8 text-center">
                 <Link to="/invest" className="btn-primary text-lg px-10 py-4">
-                  Start Investing Now
+                  <Zap className="mr-2 w-5 h-5" />
+                  Double It Now
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Link>
               </div>
@@ -613,7 +614,7 @@ const Landing = () => {
                 <li><a href="#how-it-works" className="text-gray-400 hover:text-primary-400 text-sm">How It Works</a></li>
                 <li><a href="#benefits" className="text-gray-400 hover:text-primary-400 text-sm">Benefits</a></li>
                 <li><Link to="/shop" className="text-gray-400 hover:text-primary-400 text-sm">Shop</Link></li>
-                <li><Link to="/invest" className="text-gray-400 hover:text-primary-400 text-sm">Start Investing</Link></li>
+                <li><Link to="/invest" className="text-gray-400 hover:text-primary-400 text-sm">Double It Now</Link></li>
               </ul>
             </div>
             <div>

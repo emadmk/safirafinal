@@ -133,8 +133,12 @@ const Dashboard = () => {
             Track your investments and earnings
           </p>
         </div>
-        <Link to="/invest" className="btn-primary mt-4 md:mt-0">
-          New Investment
+        <Link
+          to="/invest"
+          className="mt-4 md:mt-0 inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-primary-400 to-primary-500 hover:from-primary-500 hover:to-primary-600 text-dark-900 font-semibold rounded-xl shadow-lg shadow-primary-400/25 hover:shadow-primary-400/40 transition-all duration-300 hover:-translate-y-0.5"
+        >
+          <Zap className="mr-2 w-5 h-5" />
+          Double It Now
           <ArrowRight className="ml-2 w-5 h-5" />
         </Link>
       </div>
