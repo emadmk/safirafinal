@@ -2,10 +2,11 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import prisma from './prisma';
-import { Role } from '@prisma/client';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const JWT_EXPIRES_IN = '7d';
+
+type Role = 'USER' | 'ADMIN' | 'SUPER_ADMIN';
 
 export interface JWTPayload {
   userId: string;

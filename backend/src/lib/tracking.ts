@@ -1,9 +1,22 @@
 import { NextApiRequest } from 'next';
 import UAParser from 'ua-parser-js';
 import prisma from './prisma';
-import { EventType } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
+
+type EventType =
+  | 'PAGE_VIEW'
+  | 'SCROLL'
+  | 'CLICK'
+  | 'SIGNUP'
+  | 'INVESTMENT'
+  | 'PURCHASE'
+  | 'REFERRAL_CLICK'
+  | 'SESSION_START'
+  | 'SESSION_END'
+  | 'LOGIN_CLICK'
+  | 'PAYMENT_CLICK'
+  | 'REGISTER_CLICK';
 
 // Parse user agent for device info
 export const parseUserAgent = (userAgent: string) => {
@@ -177,28 +190,28 @@ export const getAnalyticsByReferralCode = async (referralCode: string, startDate
     if (endDate) where.createdAt.lte = endDate;
   }
 
-  const events = await prisma.trackingEvent.findMany({
+  const events: any[] = await prisma.trackingEvent.findMany({
     where,
     orderBy: { createdAt: 'desc' },
   });
 
   // Aggregate data
-  const pageViews = events.filter(e => e.eventType === 'PAGE_VIEW').length;
-  const signups = events.filter(e => e.eventType === 'SIGNUP').length;
-  const investments = events.filter(e => e.eventType === 'INVESTMENT').length;
-  const purchases = events.filter(e => e.eventType === 'PURCHASE').length;
+  const pageViews = events.filter((e: any) => e.eventType === 'PAGE_VIEW').length;
+  const signups = events.filter((e: any) => e.eventType === 'SIGNUP').length;
+  const investments = events.filter((e: any) => e.eventType === 'INVESTMENT').length;
+  const purchases = events.filter((e: any) => e.eventType === 'PURCHASE').length;
 
-  const uniqueVisitors = new Set(events.map(e => e.visitorId)).size;
-  const uniqueSessions = new Set(events.map(e => e.sessionId)).size;
+  const uniqueVisitors = new Set(events.map((e: any) => e.visitorId)).size;
+  const uniqueSessions = new Set(events.map((e: any) => e.sessionId)).size;
 
   // Device breakdown
-  const deviceBreakdown = events.reduce((acc: any, e) => {
+  const deviceBreakdown = events.reduce((acc: any, e: any) => {
     acc[e.deviceType || 'unknown'] = (acc[e.deviceType || 'unknown'] || 0) + 1;
     return acc;
   }, {});
 
   // Browser breakdown
-  const browserBreakdown = events.reduce((acc: any, e) => {
+  const browserBreakdown = events.reduce((acc: any, e: any) => {
     acc[e.browser || 'unknown'] = (acc[e.browser || 'unknown'] || 0) + 1;
     return acc;
   }, {});

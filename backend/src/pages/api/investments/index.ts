@@ -29,7 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     // Calculate timeline and status for each investment
-    const investmentsWithTimeline = investments.map((inv) => {
+    const investmentsWithTimeline = investments.map((inv: any) => {
       const now = new Date();
       let daysInProduction = 0;
       let daysInSale = 0;

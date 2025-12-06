@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
@@ -11,10 +11,54 @@ import {
   CheckCircle,
   Users,
   Award,
-  LogOut
+  LogOut,
+  Zap
 } from 'lucide-react'
 import { initTracking } from '../lib/tracking'
 import { useAuthStore } from '../store/authStore'
+
+// Countdown Timer Component
+const CountdownTimer = () => {
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+
+  useEffect(() => {
+    const targetDate = new Date('2024-12-31T23:59:59').getTime()
+
+    const timer = setInterval(() => {
+      const now = new Date().getTime()
+      const difference = targetDate - now
+
+      if (difference > 0) {
+        setTimeLeft({
+          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
+          seconds: Math.floor((difference % (1000 * 60)) / 1000),
+        })
+      }
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [])
+
+  return (
+    <div className="flex items-center justify-center space-x-4">
+      {[
+        { value: timeLeft.days, label: 'Days' },
+        { value: timeLeft.hours, label: 'Hours' },
+        { value: timeLeft.minutes, label: 'Min' },
+        { value: timeLeft.seconds, label: 'Sec' },
+      ].map((item, i) => (
+        <div key={i} className="text-center">
+          <div className="w-16 h-16 md:w-20 md:h-20 rounded-xl bg-dark-800/80 border border-primary-400/30 flex items-center justify-center">
+            <span className="text-2xl md:text-3xl font-bold text-primary-400">{String(item.value).padStart(2, '0')}</span>
+          </div>
+          <span className="text-xs text-gray-500 mt-1 block">{item.label}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 const Landing = () => {
   const { user, logout } = useAuthStore()
@@ -90,7 +134,7 @@ const Landing = () => {
             transition={{ duration: 0.8 }}
           >
             <span className="inline-block px-4 py-2 rounded-full bg-primary-400/10 border border-primary-400/30 text-primary-400 text-sm font-medium mb-6">
-              Limited Investment Opportunity
+              Limited Time Offer - Ends December 31st
             </span>
 
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-bold leading-tight mb-6">
@@ -99,14 +143,47 @@ const Landing = () => {
               <span className="gold-text">With Persian Art</span>
             </h1>
 
-            <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-8">
+            {/* Double Money Visual */}
+            <motion.div
+              className="flex items-center justify-center gap-4 md:gap-6 mb-8"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+            >
+              <div className="relative">
+                <div className="w-20 h-20 md:w-28 md:h-28 rounded-full bg-gradient-to-br from-primary-400/20 to-primary-500/20 border-2 border-primary-400/50 flex items-center justify-center">
+                  <span className="text-2xl md:text-4xl font-bold text-white">$100</span>
+                </div>
+              </div>
+              <motion.div
+                animate={{ x: [0, 5, 0] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+              >
+                <Zap className="w-10 h-10 md:w-14 md:h-14 text-primary-400" />
+              </motion.div>
+              <div className="relative">
+                <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-green-400/20 to-green-500/20 border-2 border-green-400/50 flex items-center justify-center animate-pulse">
+                  <span className="text-3xl md:text-5xl font-bold text-green-400">$350</span>
+                </div>
+                <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-bold">+250%</span>
+              </div>
+            </motion.div>
+
+            <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-6">
               Invest $100 in handcrafted Persian Pateh art. Earn up to $250 profit with
               <span className="text-primary-400 font-semibold"> 100% money-back guarantee</span>.
             </p>
 
+            {/* Countdown Timer */}
+            <div className="mb-8">
+              <p className="text-sm text-gray-500 mb-4">Offer ends in:</p>
+              <CountdownTimer />
+            </div>
+
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-              <Link to="/invest" className="btn-primary text-lg px-8 py-4 w-full sm:w-auto">
-                Start With $100
+              <Link to="/invest" className="btn-primary text-lg px-8 py-4 w-full sm:w-auto group">
+                <Zap className="mr-2 w-5 h-5 group-hover:animate-pulse" />
+                Double It Now
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Link>
               <a href="#how-it-works" className="btn-secondary text-lg px-8 py-4 w-full sm:w-auto">
@@ -140,7 +217,7 @@ const Landing = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
               >
-                <div className="text-3xl md:text-4xl font-bold text-primary-400">250%</div>
+                <div className="text-3xl md:text-4xl font-bold text-green-400">+250%</div>
                 <div className="text-sm text-gray-500">Max Return</div>
               </motion.div>
             </div>
@@ -505,8 +582,9 @@ const Landing = () => {
               Join hundreds of investors who are growing their wealth with authentic Persian art.
               Start with just $100 and watch your investment flourish.
             </p>
-            <Link to="/invest" className="btn-primary text-xl px-12 py-5">
-              Invest $100 Now
+            <Link to="/invest" className="btn-primary text-xl px-12 py-5 group">
+              <Zap className="mr-2 w-6 h-6 group-hover:animate-pulse" />
+              Double Your $100 Now
               <ArrowRight className="ml-2 w-6 h-6" />
             </Link>
             <p className="mt-6 text-gray-500 text-sm">

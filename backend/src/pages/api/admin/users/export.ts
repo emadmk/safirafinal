@@ -43,7 +43,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       'Registered At',
     ];
 
-    const rows = users.map((user) => [
+    const rows = users.map((user: any) => [
       user.id,
       user.email,
       user.firstName || '',
@@ -59,8 +59,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     const csvContent = [
       headers.join(','),
-      ...rows.map((row) =>
-        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+      ...rows.map((row: any[]) =>
+        row.map((cell: any) => `"${String(cell).replace(/"/g, '""')}"`).join(',')
       ),
     ].join('\n');
 

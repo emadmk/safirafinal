@@ -50,7 +50,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       where: { paymentStatus: 'FINISHED' },
       select: { amount: true },
     });
-    const totalRevenue = sales.reduce((sum, sale) => sum + sale.amount, 0);
+    const totalRevenue = sales.reduce((sum: number, sale: any) => sum + sale.amount, 0);
 
     // Get investments this month
     const startOfMonth = new Date();
@@ -108,9 +108,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       },
     });
 
-    const salesMap = new Map(salesByRef.map(s => [s.referralCode, s._count.referralCode]));
+    const salesMap = new Map(salesByRef.map((s: any) => [s.referralCode, s._count.referralCode]));
 
-    const sellers = sellersData.map(s => ({
+    const sellers = sellersData.map((s: any) => ({
       referralCode: s.utmSource,
       name: s.utmSource,
       visits: s._count.utmSource,
@@ -148,7 +148,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       recentInvestments,
       recentPaymentLogs,
       sellers,
-      trackingBySource: trackingBySource.map((t) => ({
+      trackingBySource: trackingBySource.map((t: any) => ({
         source: t.utmSource,
         count: t._count,
       })),

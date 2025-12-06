@@ -2,7 +2,25 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
 import { verifyIPNSignature, mapPaymentStatus } from '@/lib/nowpayment';
 import { sendEmail, emailTemplates } from '@/lib/email';
-import { PaymentStatus, ProductionStatus } from '@prisma/client';
+
+type PaymentStatus =
+  | 'PENDING'
+  | 'CONFIRMING'
+  | 'CONFIRMED'
+  | 'SENDING'
+  | 'PARTIALLY_PAID'
+  | 'FINISHED'
+  | 'FAILED'
+  | 'REFUNDED'
+  | 'EXPIRED';
+
+type ProductionStatus =
+  | 'PENDING_PAYMENT'
+  | 'QUEUED'
+  | 'IN_PRODUCTION'
+  | 'QUALITY_CHECK'
+  | 'FRAMING'
+  | 'COMPLETED';
 
 export const config = {
   api: {
@@ -66,7 +84,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           updateData.productionEndDate = productionEndDate;
           updateData.saleStartDate = productionEndDate;
           updateData.saleEndDate = new Date(productionEndDate.getTime() + 60 * 24 * 60 * 60 * 1000); // +2 months after production
-          updateData.productionStatus = ProductionStatus.QUEUED;
+          updateData.productionStatus = 'QUEUED' as ProductionStatus;
 
           // Send confirmation email
           try {

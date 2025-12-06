@@ -57,7 +57,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     ]);
 
     // Add isUnread flag to each ticket
-    const ticketsWithUnread = tickets.map(ticket => ({
+    const ticketsWithUnread = tickets.map((ticket: any) => ({
       ...ticket,
       isUnread: !ticket.replies.some((reply: any) => reply.isAdminReply),
     }));

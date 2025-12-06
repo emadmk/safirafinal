@@ -9,7 +9,11 @@ import {
   ArrowRight,
   CheckCircle,
   Share2,
-  Copy
+  Copy,
+  Zap,
+  Sparkles,
+  Users,
+  Hash
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../lib/api'
@@ -21,6 +25,7 @@ const Dashboard = () => {
   const [searchParams] = useSearchParams()
   const { user } = useAuthStore()
   const [investments, setInvestments] = useState<Investment[]>([])
+  const [referrals, setReferrals] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -34,8 +39,12 @@ const Dashboard = () => {
 
   const fetchInvestments = async () => {
     try {
-      const response = await api.get('/investments')
-      setInvestments(response.data.investments)
+      const [investmentsRes, referralsRes] = await Promise.all([
+        api.get('/investments'),
+        api.get('/referrals').catch(() => ({ data: { referrals: [] } }))
+      ])
+      setInvestments(investmentsRes.data.investments)
+      setReferrals(referralsRes.data.referrals || [])
     } catch (error) {
       toast.error('Failed to load investments')
     }
@@ -59,6 +68,60 @@ const Dashboard = () => {
     <div className="space-y-8">
       {/* Payment Reminder Popup */}
       <PaymentReminderPopup investments={investments} />
+
+      {/* Opportunity/Congratulations Banner */}
+      <motion.div
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary-400/20 via-primary-500/10 to-dark-800 border border-primary-400/30"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary-400/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="relative p-6 md:p-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex items-start space-x-4">
+              <div className="w-14 h-14 rounded-2xl bg-primary-400/20 flex items-center justify-center flex-shrink-0">
+                {investments.some(inv => inv.paymentStatus === 'FINISHED') ? (
+                  <Sparkles className="w-7 h-7 text-primary-400" />
+                ) : (
+                  <Zap className="w-7 h-7 text-primary-400" />
+                )}
+              </div>
+              <div>
+                {investments.some(inv => inv.paymentStatus === 'FINISHED') ? (
+                  <>
+                    <h2 className="text-xl md:text-2xl font-bold text-white mb-1">
+                      Congratulations! 🎉
+                    </h2>
+                    <p className="text-gray-300">
+                      You're on your way to <span className="text-primary-400 font-semibold">doubling your money</span>.
+                      Your investment is working for you!
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h2 className="text-xl md:text-2xl font-bold text-white mb-1">
+                      Don't Miss This Opportunity! ⚡
+                    </h2>
+                    <p className="text-gray-300">
+                      <span className="text-primary-400 font-semibold">Double your money</span> with our exclusive
+                      investment program. Start with just $100!
+                    </p>
+                  </>
+                )}
+              </div>
+            </div>
+            {!investments.some(inv => inv.paymentStatus === 'FINISHED') && (
+              <Link
+                to="/invest"
+                className="btn-primary whitespace-nowrap flex-shrink-0"
+              >
+                <Zap className="w-5 h-5 mr-2" />
+                Double It Now
+              </Link>
+            )}
+          </div>
+        </div>
+      </motion.div>
 
       {/* Welcome Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between">
@@ -155,6 +218,67 @@ const Dashboard = () => {
         </div>
       </motion.div>
 
+      {/* Referral Slots Section */}
+      <motion.div
+        className="card"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.45 }}
+      >
+        <div className="flex items-center space-x-2 mb-6">
+          <Users className="w-5 h-5 text-primary-400" />
+          <h3 className="text-lg font-bold text-white">Referral Progress</h3>
+          <span className="text-sm text-gray-400">({Math.min(referrals.length, 4)}/4 slots filled)</span>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[0, 1, 2, 3].map((slot) => {
+            const referral = referrals[slot]
+            return (
+              <motion.div
+                key={slot}
+                className={`relative p-4 rounded-xl border-2 border-dashed transition-all ${
+                  referral
+                    ? 'border-primary-400 bg-primary-400/10'
+                    : 'border-gray-600 bg-dark-700/50 hover:border-gray-500'
+                }`}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.5 + slot * 0.1 }}
+              >
+                {referral ? (
+                  <div className="text-center">
+                    <div className="w-10 h-10 rounded-full bg-primary-400/20 flex items-center justify-center mx-auto mb-2">
+                      <CheckCircle className="w-5 h-5 text-primary-400" />
+                    </div>
+                    <p className="text-white font-medium text-sm truncate">
+                      {referral.firstName || 'User'} {referral.lastName?.[0] || ''}
+                    </p>
+                    <p className="text-primary-400 text-xs font-semibold mt-1">+$250</p>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <div className="w-10 h-10 rounded-full bg-gray-700/50 flex items-center justify-center mx-auto mb-2">
+                      <Users className="w-5 h-5 text-gray-500" />
+                    </div>
+                    <p className="text-gray-500 text-sm">Empty Slot</p>
+                    <p className="text-gray-600 text-xs mt-1">Invite a friend</p>
+                  </div>
+                )}
+              </motion.div>
+            )
+          })}
+        </div>
+
+        {referrals.length < 4 && (
+          <div className="mt-4 text-center">
+            <p className="text-gray-400 text-sm">
+              Share your link to fill all slots and earn up to <span className="text-primary-400 font-bold">$1,000</span>!
+            </p>
+          </div>
+        )}
+      </motion.div>
+
       {/* Investment Timeline */}
       {latestInvestment && (
         <motion.div
@@ -163,7 +287,19 @@ const Dashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <h3 className="text-lg font-bold text-white mb-6">Latest Investment Progress</h3>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold text-white">Latest Investment Progress</h3>
+            {/* Unique Piece Number */}
+            <div className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-primary-400/20 to-primary-400/5 rounded-xl border border-primary-400/30">
+              <Hash className="w-5 h-5 text-primary-400" />
+              <div>
+                <p className="text-xs text-gray-400">Your Piece</p>
+                <p className="text-lg font-bold text-primary-400">
+                  #{latestInvestment.id.slice(-6).toUpperCase()}
+                </p>
+              </div>
+            </div>
+          </div>
 
           <div className="space-y-6">
             {/* Investment Summary */}
@@ -294,10 +430,12 @@ const Dashboard = () => {
               >
                 <div className="flex items-center space-x-4">
                   <div className="w-12 h-12 rounded-xl bg-primary-400/10 flex items-center justify-center">
-                    <Gift className="w-6 h-6 text-primary-400" />
+                    <Hash className="w-6 h-6 text-primary-400" />
                   </div>
                   <div>
-                    <p className="text-white font-medium">Investment #{investment.id.slice(0, 8)}</p>
+                    <p className="text-white font-medium">
+                      Piece #{investment.id.slice(-6).toUpperCase()}
+                    </p>
                     <p className="text-gray-400 text-sm">{investment.productionStatus.replace(/_/g, ' ')}</p>
                   </div>
                 </div>

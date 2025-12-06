@@ -66,15 +66,15 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     res.json({
       summary: {
-        bySource: sourceStats.map((s) => ({
+        bySource: sourceStats.map((s: any) => ({
           source: s.utmSource || 'direct',
           count: s._count,
         })),
-        byEvent: eventStats.map((e) => ({
+        byEvent: eventStats.map((e: any) => ({
           event: e.eventType,
           count: e._count,
         })),
-        byDevice: deviceStats.map((d) => ({
+        byDevice: deviceStats.map((d: any) => ({
           device: d.deviceType || 'unknown',
           count: d._count,
         })),
