@@ -23,7 +23,7 @@ const Shop = () => {
 
   const referralCode = searchParams.get('ref') || ''
 
-  const { register, handleSubmit, formState: { errors } } = useForm<PurchaseForm>()
+  const { register, handleSubmit } = useForm<PurchaseForm>()
 
   useEffect(() => {
     initTracking()

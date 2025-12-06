@@ -24,7 +24,7 @@ const Profile = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile')
 
-  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<ProfileForm>({
+  const { register, handleSubmit, reset, watch } = useForm<ProfileForm>({
     defaultValues: {
       firstName: user?.firstName || '',
       lastName: user?.lastName || '',

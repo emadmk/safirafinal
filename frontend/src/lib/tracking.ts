@@ -6,22 +6,24 @@ const VISITOR_KEY = 'safira_visitor'
 
 // Get or create session ID
 export const getSessionId = (): string => {
-  let sessionId = sessionStorage.getItem(SESSION_KEY)
-  if (!sessionId) {
-    sessionId = uuidv4()
-    sessionStorage.setItem(SESSION_KEY, sessionId)
+  const existing = sessionStorage.getItem(SESSION_KEY)
+  if (existing) {
+    return existing
   }
-  return sessionId
+  const newId = uuidv4()
+  sessionStorage.setItem(SESSION_KEY, newId)
+  return newId
 }
 
 // Get or create visitor ID
 export const getVisitorId = (): string => {
-  let visitorId = localStorage.getItem(VISITOR_KEY)
-  if (!visitorId) {
-    visitorId = uuidv4()
-    localStorage.setItem(VISITOR_KEY, visitorId)
+  const existing = localStorage.getItem(VISITOR_KEY)
+  if (existing) {
+    return existing
   }
-  return visitorId
+  const newId = uuidv4()
+  localStorage.setItem(VISITOR_KEY, newId)
+  return newId
 }
 
 // Parse UTM params from URL

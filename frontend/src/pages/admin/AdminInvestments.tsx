@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { TrendingUp, Search, Edit, Eye } from 'lucide-react'
+import { Search, Edit } from 'lucide-react'
 import { format } from 'date-fns'
 import toast from 'react-hot-toast'
 import api from '../../lib/api'

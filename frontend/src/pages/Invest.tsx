@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { motion } from 'framer-motion'
 import {
@@ -7,10 +7,6 @@ import {
   ArrowRight,
   ArrowLeft,
   CheckCircle,
-  User,
-  Mail,
-  Lock,
-  MapPin,
   CreditCard,
   Shield,
   TrendingUp,
@@ -34,14 +30,13 @@ interface InvestForm {
 }
 
 const Invest = () => {
-  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const referralCode = searchParams.get('ref') || ''
   const { isAuthenticated, register: registerUser, user } = useAuthStore()
   const [step, setStep] = useState(isAuthenticated ? 2 : 1)
   const [isLoading, setIsLoading] = useState(false)
 
-  const { register, handleSubmit, formState: { errors }, watch } = useForm<InvestForm>({
+  const { register, handleSubmit } = useForm<InvestForm>({
     defaultValues: {
       firstName: user?.firstName || '',
       lastName: user?.lastName || '',

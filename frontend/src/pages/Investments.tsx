@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Gift, ArrowRight, Clock, TrendingUp, CheckCircle } from 'lucide-react'
+import { Gift, ArrowRight, CheckCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../lib/api'
 import { Investment } from '../types'

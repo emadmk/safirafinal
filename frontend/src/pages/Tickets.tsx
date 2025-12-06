@@ -22,9 +22,8 @@ const Tickets = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [showNewTicket, setShowNewTicket] = useState(false)
   const [expandedTicket, setExpandedTicket] = useState<string | null>(null)
-  const [replyingTo, setReplyingTo] = useState<string | null>(null)
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<TicketForm>()
+  const { register, handleSubmit, reset } = useForm<TicketForm>()
   const { register: registerReply, handleSubmit: handleSubmitReply, reset: resetReply } = useForm<ReplyForm>()
 
   useEffect(() => {
@@ -58,7 +57,6 @@ const Tickets = () => {
       await api.post(`/tickets/${ticketId}/reply`, data)
       toast.success('Reply sent!')
       resetReply()
-      setReplyingTo(null)
       fetchTickets()
     } catch {
       toast.error('Failed to send reply')

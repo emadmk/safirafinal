@@ -19,9 +19,11 @@
     "react-hot-toast": "^2.4.1",
     "date-fns": "^3.0.6",
     "lucide-react": "^0.303.0",
-    "@headlessui/react": "^1.7.17"
+    "@headlessui/react": "^1.7.17",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
+    "@types/uuid": "^9.0.7",
     "@types/react": "^18.2.45",
     "@types/react-dom": "^18.2.17",
     "@vitejs/plugin-react": "^4.2.1",
