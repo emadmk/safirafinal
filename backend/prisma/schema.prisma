@@ -1,0 +1,345 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model for investors
+model User {
+  id              String    @id @default(uuid())
+  email           String    @unique
+  password        String
+  firstName       String
+  lastName        String
+  phone           String?
+  address         String?
+  city            String?
+  country         String?
+  postalCode      String?
+  referralCode    String    @unique @default(uuid())
+  referredBy      String?   // referral code of who referred them
+  role            Role      @default(USER)
+  isEmailVerified Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  investments     Investment[]
+  tickets         Ticket[]
+  ticketReplies   TicketReply[]
+  trackingEvents  TrackingEvent[]
+  referralSales   Sale[]    @relation("ReferralSales")
+
+  @@index([referralCode])
+  @@index([email])
+}
+
+// Investment represents a user's investment in a product
+model Investment {
+  id                    String    @id @default(uuid())
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id])
+
+  // Investment details
+  userInvestment        Float     @default(100)  // $100 from user
+  companyInvestment     Float     @default(250)  // $250 from Safira
+  productValue          Float     @default(600)  // Total product value
+
+  // Payment details
+  paymentId             String?   @unique
+  paymentStatus         PaymentStatus @default(PENDING)
+  paymentMethod         String?
+  paymentCurrency       String?
+  paymentAmount         Float?
+  paymentAddress        String?
+  nowPaymentId          String?   @unique
+
+  // Timeline
+  investmentDate        DateTime?
+  productionStartDate   DateTime?
+  productionEndDate     DateTime? // +6 months from start
+  saleStartDate         DateTime? // Same as productionEndDate
+  saleEndDate           DateTime? // +2 months from saleStartDate
+
+  // Production status
+  productionStatus      ProductionStatus @default(PENDING_PAYMENT)
+  productionStage       Int       @default(0) // 0-100%
+  productionNotes       String?
+
+  // Sale status
+  saleStatus            SaleStatus @default(NOT_STARTED)
+
+  // Final outcome
+  finalOutcome          FinalOutcome?
+  userEarnings          Float?
+  companyEarnings       Float?
+
+  // Product details
+  productId             String?
+  product               Product?  @relation(fields: [productId], references: [id])
+
+  // Referral tracking for sales
+  referralCode          String    @unique @default(uuid())
+
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  sales                 Sale[]
+
+  @@index([userId])
+  @@index([paymentStatus])
+  @@index([productionStatus])
+  @@index([saleStatus])
+}
+
+// Product model for finished products ready for sale
+model Product {
+  id              String    @id @default(uuid())
+  name            String
+  description     String    @db.Text
+  price           Float     @default(550) // $600 - $50 discount
+  originalPrice   Float     @default(600)
+  images          String[]  // Array of image URLs
+  isAvailable     Boolean   @default(true)
+  isFeatured      Boolean   @default(false)
+
+  // Product specifications
+  material        String?
+  dimensions      String?
+  weight          String?
+  craftsman       String?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  investments     Investment[]
+  sales           Sale[]
+
+  @@index([isAvailable])
+}
+
+// Sale model for tracking sales
+model Sale {
+  id              String    @id @default(uuid())
+  investmentId    String?
+  investment      Investment? @relation(fields: [investmentId], references: [id])
+  productId       String?
+  product         Product?  @relation(fields: [productId], references: [id])
+
+  // Buyer info (can be anonymous)
+  buyerEmail      String?
+  buyerName       String?
+  buyerAddress    String?
+
+  // Payment
+  paymentId       String?   @unique
+  paymentStatus   PaymentStatus @default(PENDING)
+  nowPaymentId    String?   @unique
+  amount          Float
+
+  // Referral tracking
+  referredByUserId String?
+  referredByUser  User?     @relation("ReferralSales", fields: [referredByUserId], references: [id])
+  referralCode    String?   // The code used
+  saleType        SaleType  @default(DIRECT) // REFERRAL or DIRECT
+
+  // Earnings distribution
+  investorEarnings Float?
+  companyEarnings  Float?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([investmentId])
+  @@index([paymentStatus])
+}
+
+// Tracking for microinfluencer analytics
+model TrackingEvent {
+  id              String    @id @default(uuid())
+
+  // Source tracking
+  utmSource       String?
+  utmMedium       String?
+  utmCampaign     String?
+  utmContent      String?
+  utmTerm         String?
+  referralCode    String?   // Can be influencer code or investor code
+
+  // Visitor info
+  visitorId       String    // Unique visitor fingerprint
+  userId          String?   // If user is logged in
+  user            User?     @relation(fields: [userId], references: [id])
+
+  // Device info
+  ipAddress       String?
+  userAgent       String?
+  deviceType      String?   // mobile, desktop, tablet
+  browser         String?
+  browserVersion  String?
+  os              String?
+  osVersion       String?
+
+  // Event details
+  eventType       EventType
+  eventData       Json?     // Additional event data
+  pageUrl         String?
+  pageTitle       String?
+
+  // Session info
+  sessionId       String
+  sessionDuration Int?      // in seconds
+  scrollDepth     Int?      // percentage
+
+  // Geo info
+  country         String?
+  city            String?
+
+  createdAt       DateTime  @default(now())
+
+  @@index([utmSource])
+  @@index([referralCode])
+  @@index([visitorId])
+  @@index([sessionId])
+  @@index([eventType])
+  @@index([createdAt])
+}
+
+// Ticket system for support
+model Ticket {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+
+  subject         String
+  message         String    @db.Text
+  status          TicketStatus @default(OPEN)
+  priority        TicketPriority @default(MEDIUM)
+  category        String?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  replies         TicketReply[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model TicketReply {
+  id              String    @id @default(uuid())
+  ticketId        String
+  ticket          Ticket    @relation(fields: [ticketId], references: [id])
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+
+  message         String    @db.Text
+  isAdminReply    Boolean   @default(false)
+
+  createdAt       DateTime  @default(now())
+
+  @@index([ticketId])
+}
+
+// NowPayment transaction logs
+model PaymentLog {
+  id              String    @id @default(uuid())
+  nowPaymentId    String?
+  paymentStatus   String
+  payType         String?   // investment or purchase
+  relatedId       String?   // investmentId or saleId
+
+  // IPN data
+  ipnData         Json?
+
+  createdAt       DateTime  @default(now())
+
+  @@index([nowPaymentId])
+  @@index([relatedId])
+}
+
+// Admin settings
+model Setting {
+  id              String    @id @default(uuid())
+  key             String    @unique
+  value           String    @db.Text
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// Enums
+enum Role {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum PaymentStatus {
+  PENDING
+  CONFIRMING
+  CONFIRMED
+  SENDING
+  PARTIALLY_PAID
+  FINISHED
+  FAILED
+  REFUNDED
+  EXPIRED
+}
+
+enum ProductionStatus {
+  PENDING_PAYMENT
+  QUEUED
+  IN_PRODUCTION
+  QUALITY_CHECK
+  FRAMING
+  COMPLETED
+}
+
+enum SaleStatus {
+  NOT_STARTED
+  ACTIVE
+  SOLD_BY_INVESTOR
+  SOLD_BY_COMPANY
+  GUARANTEED_DELIVERY
+}
+
+enum FinalOutcome {
+  SOLD_BY_INVESTOR
+  SOLD_BY_COMPANY
+  GUARANTEED_DELIVERY
+}
+
+enum SaleType {
+  REFERRAL
+  DIRECT
+}
+
+enum EventType {
+  PAGE_VIEW
+  SCROLL
+  CLICK
+  SIGNUP
+  INVESTMENT
+  PURCHASE
+  REFERRAL_CLICK
+  SESSION_START
+  SESSION_END
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_REPLY
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}

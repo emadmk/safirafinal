@@ -1,0 +1,250 @@
+import { NextApiRequest } from 'next';
+import UAParser from 'ua-parser-js';
+import prisma from './prisma';
+import { EventType } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
+import axios from 'axios';
+
+// Parse user agent for device info
+export const parseUserAgent = (userAgent: string) => {
+  const parser = new UAParser(userAgent);
+  const result = parser.getResult();
+
+  return {
+    browser: result.browser.name || 'Unknown',
+    browserVersion: result.browser.version || 'Unknown',
+    os: result.os.name || 'Unknown',
+    osVersion: result.os.version || 'Unknown',
+    deviceType: result.device.type || 'desktop',
+  };
+};
+
+// Get client IP from request
+export const getClientIP = (req: NextApiRequest): string => {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (typeof forwarded === 'string') {
+    return forwarded.split(',')[0].trim();
+  }
+  return req.socket?.remoteAddress || 'unknown';
+};
+
+// Parse UTM parameters from query
+export const parseUTMParams = (query: any) => {
+  return {
+    utmSource: query.utm_source || query.ref || null,
+    utmMedium: query.utm_medium || null,
+    utmCampaign: query.utm_campaign || null,
+    utmContent: query.utm_content || null,
+    utmTerm: query.utm_term || null,
+    referralCode: query.ref || query.referral || null,
+  };
+};
+
+// Generate visitor ID (fingerprint-like)
+export const generateVisitorId = (req: NextApiRequest): string => {
+  const userAgent = req.headers['user-agent'] || '';
+  const ip = getClientIP(req);
+  const acceptLanguage = req.headers['accept-language'] || '';
+
+  // Create a simple hash
+  const data = `${userAgent}-${ip}-${acceptLanguage}`;
+  let hash = 0;
+  for (let i = 0; i < data.length; i++) {
+    const char = data.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return `v_${Math.abs(hash).toString(36)}`;
+};
+
+// Track an event
+export interface TrackEventParams {
+  req: NextApiRequest;
+  eventType: EventType;
+  eventData?: any;
+  pageUrl?: string;
+  pageTitle?: string;
+  userId?: string;
+  sessionId?: string;
+  sessionDuration?: number;
+  scrollDepth?: number;
+}
+
+export const trackEvent = async (params: TrackEventParams) => {
+  const {
+    req,
+    eventType,
+    eventData,
+    pageUrl,
+    pageTitle,
+    userId,
+    sessionId,
+    sessionDuration,
+    scrollDepth,
+  } = params;
+
+  const userAgent = req.headers['user-agent'] || '';
+  const deviceInfo = parseUserAgent(userAgent);
+  const utmParams = parseUTMParams(req.query);
+  const visitorId = generateVisitorId(req);
+  const ipAddress = getClientIP(req);
+
+  const event = await prisma.trackingEvent.create({
+    data: {
+      visitorId,
+      userId,
+      sessionId: sessionId || uuidv4(),
+      eventType,
+      eventData,
+      pageUrl,
+      pageTitle,
+      ipAddress,
+      userAgent,
+      deviceType: deviceInfo.deviceType,
+      browser: deviceInfo.browser,
+      browserVersion: deviceInfo.browserVersion,
+      os: deviceInfo.os,
+      osVersion: deviceInfo.osVersion,
+      sessionDuration,
+      scrollDepth,
+      ...utmParams,
+    },
+  });
+
+  // If this is from a microinfluencer (has utm_source), send to their platform
+  if (utmParams.utmSource) {
+    await sendToMicroinfluencerPlatform(event);
+  }
+
+  return event;
+};
+
+// Send tracking data to microinfluencer platform
+export const sendToMicroinfluencerPlatform = async (event: any) => {
+  const apiUrl = process.env.MICROINFLUENCER_API_URL;
+  const apiKey = process.env.MICROINFLUENCER_API_KEY;
+
+  if (!apiUrl || !apiKey) return;
+
+  try {
+    await axios.post(
+      `${apiUrl}/webhooks/safira-tracking`,
+      {
+        event_type: event.eventType,
+        event_data: event.eventData,
+        utm_source: event.utmSource,
+        utm_medium: event.utmMedium,
+        utm_campaign: event.utmCampaign,
+        utm_content: event.utmContent,
+        utm_term: event.utmTerm,
+        referral_code: event.referralCode,
+        visitor_id: event.visitorId,
+        user_id: event.userId,
+        device_type: event.deviceType,
+        browser: event.browser,
+        browser_version: event.browserVersion,
+        os: event.os,
+        os_version: event.osVersion,
+        page_url: event.pageUrl,
+        page_title: event.pageTitle,
+        session_id: event.sessionId,
+        session_duration: event.sessionDuration,
+        scroll_depth: event.scrollDepth,
+        country: event.country,
+        city: event.city,
+        timestamp: event.createdAt,
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 5000,
+      }
+    );
+  } catch (error) {
+    console.error('Failed to send tracking data to microinfluencer platform:', error);
+  }
+};
+
+// Get analytics for a specific referral code (for microinfluencer API)
+export const getAnalyticsByReferralCode = async (referralCode: string, startDate?: Date, endDate?: Date) => {
+  const where: any = { referralCode };
+
+  if (startDate || endDate) {
+    where.createdAt = {};
+    if (startDate) where.createdAt.gte = startDate;
+    if (endDate) where.createdAt.lte = endDate;
+  }
+
+  const events = await prisma.trackingEvent.findMany({
+    where,
+    orderBy: { createdAt: 'desc' },
+  });
+
+  // Aggregate data
+  const pageViews = events.filter(e => e.eventType === 'PAGE_VIEW').length;
+  const signups = events.filter(e => e.eventType === 'SIGNUP').length;
+  const investments = events.filter(e => e.eventType === 'INVESTMENT').length;
+  const purchases = events.filter(e => e.eventType === 'PURCHASE').length;
+
+  const uniqueVisitors = new Set(events.map(e => e.visitorId)).size;
+  const uniqueSessions = new Set(events.map(e => e.sessionId)).size;
+
+  // Device breakdown
+  const deviceBreakdown = events.reduce((acc: any, e) => {
+    acc[e.deviceType || 'unknown'] = (acc[e.deviceType || 'unknown'] || 0) + 1;
+    return acc;
+  }, {});
+
+  // Browser breakdown
+  const browserBreakdown = events.reduce((acc: any, e) => {
+    acc[e.browser || 'unknown'] = (acc[e.browser || 'unknown'] || 0) + 1;
+    return acc;
+  }, {});
+
+  // Hourly breakdown
+  const hourlyBreakdown = events.reduce((acc: any, e) => {
+    const hour = new Date(e.createdAt).getHours();
+    acc[hour] = (acc[hour] || 0) + 1;
+    return acc;
+  }, {});
+
+  return {
+    summary: {
+      totalEvents: events.length,
+      pageViews,
+      signups,
+      investments,
+      purchases,
+      uniqueVisitors,
+      uniqueSessions,
+      conversionRate: uniqueVisitors > 0 ? ((signups + investments) / uniqueVisitors * 100).toFixed(2) : '0',
+    },
+    breakdown: {
+      device: deviceBreakdown,
+      browser: browserBreakdown,
+      hourly: hourlyBreakdown,
+    },
+    recentEvents: events.slice(0, 100).map(e => ({
+      id: e.id,
+      type: e.eventType,
+      timestamp: e.createdAt,
+      device: e.deviceType,
+      browser: e.browser,
+      page: e.pageUrl,
+      sessionDuration: e.sessionDuration,
+      scrollDepth: e.scrollDepth,
+    })),
+  };
+};
+
+export default {
+  trackEvent,
+  parseUserAgent,
+  getClientIP,
+  parseUTMParams,
+  generateVisitorId,
+  getAnalyticsByReferralCode,
+  sendToMicroinfluencerPlatform,
+};
