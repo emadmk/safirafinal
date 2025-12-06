@@ -79,6 +79,8 @@ const Invest = () => {
         postalCode: data.postalCode,
         referredBy: referralCode,
       })
+      // Track signup event for influencer
+      trackEvent('SIGNUP', { referralCode })
       toast.success('Account created!')
       setStep(2)
     } catch (error: any) {

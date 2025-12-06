@@ -17,7 +17,20 @@ type EventType =
   | 'REGISTER_CLICK';
 
 const eventSchema = z.object({
-  eventType: z.enum(['PAGE_VIEW', 'SCROLL', 'CLICK', 'SESSION_START', 'SESSION_END', 'REFERRAL_CLICK']),
+  eventType: z.enum([
+    'PAGE_VIEW',
+    'SCROLL',
+    'CLICK',
+    'SIGNUP',
+    'INVESTMENT',
+    'PURCHASE',
+    'REFERRAL_CLICK',
+    'SESSION_START',
+    'SESSION_END',
+    'LOGIN_CLICK',
+    'PAYMENT_CLICK',
+    'REGISTER_CLICK'
+  ]),
   pageUrl: z.string().optional(),
   pageTitle: z.string().optional(),
   eventData: z.any().optional(),
