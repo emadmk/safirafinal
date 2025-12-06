@@ -21,6 +21,7 @@ import AdminUsers from './pages/admin/AdminUsers'
 import AdminTickets from './pages/admin/AdminTickets'
 import AdminPayments from './pages/admin/AdminPayments'
 import AdminSellers from './pages/admin/AdminSellers'
+import AdminSellerDetail from './pages/admin/AdminSellerDetail'
 import AdminTracking from './pages/admin/AdminTracking'
 
 // Layouts
@@ -89,6 +90,7 @@ function App() {
         <Route path="tickets" element={<AdminTickets />} />
         <Route path="payments" element={<AdminPayments />} />
         <Route path="sellers" element={<AdminSellers />} />
+        <Route path="sellers/:code" element={<AdminSellerDetail />} />
         <Route path="tracking" element={<AdminTracking />} />
       </Route>
 
