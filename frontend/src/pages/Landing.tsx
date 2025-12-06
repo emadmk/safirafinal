@@ -10,7 +10,6 @@ import {
   Star,
   CheckCircle,
   Users,
-  Gem,
   Award,
   LogOut
 } from 'lucide-react'
@@ -31,8 +30,8 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 md:h-20 overflow-hidden">
             <Link to="/" className="flex items-center space-x-2 flex-shrink-0">
-              <Gem className="w-8 h-8 text-primary-400" />
-              <span className="text-xl md:text-2xl font-serif font-bold gold-text">SAFIRA</span>
+              <img src="/logo.png" alt="Safira" className="w-10 h-10 md:w-12 md:h-12 object-contain" />
+              <span className="text-xl md:text-2xl font-luxury font-semibold tracking-wider gold-text">SAFIRALUX</span>
             </Link>
             <div className="hidden md:flex items-center space-x-8">
               <a href="#how-it-works" className="text-gray-300 hover:text-primary-400 transition-colors">How It Works</a>
@@ -65,9 +64,21 @@ const Landing = () => {
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
+        {/* Video Background */}
+        <div className="absolute inset-0 z-0">
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="w-full h-full object-cover opacity-30"
+          >
+            <source src="/Movie.mp4" type="video/mp4" />
+          </video>
+          <div className="absolute inset-0 bg-gradient-to-b from-dark-950/80 via-dark-900/70 to-dark-800/90" />
+        </div>
         {/* Background Effects */}
-        <div className="absolute inset-0 bg-gradient-to-b from-dark-950 via-dark-900 to-dark-800" />
-        <div className="absolute inset-0 opacity-20">
+        <div className="absolute inset-0 opacity-20 z-0">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-400 rounded-full filter blur-[150px] animate-pulse-slow" />
           <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary-500 rounded-full filter blur-[150px] animate-pulse-slow delay-1000" />
         </div>
@@ -160,13 +171,11 @@ const Landing = () => {
             >
               <div className="relative">
                 <div className="aspect-square rounded-2xl bg-gradient-to-br from-dark-700 to-dark-800 border border-primary-400/20 overflow-hidden">
-                  {/* Placeholder for product image */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center p-8">
-                      <Gem className="w-24 h-24 text-primary-400/30 mx-auto mb-4" />
-                      <p className="text-gray-500">Handcrafted Pateh Artwork</p>
-                    </div>
-                  </div>
+                  <img
+                    src="/Photo product (1).jpg"
+                    alt="Handcrafted Pateh Artwork"
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                  />
                 </div>
                 <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-primary-400/10 rounded-full blur-2xl" />
               </div>
@@ -436,9 +445,13 @@ const Landing = () => {
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1, 2, 3].map((i) => (
+            {[
+              { id: 1, name: 'Royal Persian Pateh', image: '/Photo product (2).jpg' },
+              { id: 2, name: 'Classic Kerman Art', image: '/Photo product (3).jpg' },
+              { id: 3, name: 'Traditional Silk Pateh', image: '/Photo product (4).jpg' },
+            ].map((product, i) => (
               <motion.div
-                key={i}
+                key={product.id}
                 className="card p-0 overflow-hidden group"
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -446,20 +459,22 @@ const Landing = () => {
                 transition={{ delay: i * 0.1 }}
               >
                 <div className="aspect-square bg-dark-700 relative overflow-hidden">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Gem className="w-16 h-16 text-primary-400/20" />
-                  </div>
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-dark-900 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
                 <div className="p-6">
-                  <h3 className="text-lg font-bold text-white mb-2">Persian Pateh #{i}</h3>
+                  <h3 className="text-lg font-bold text-white mb-2">{product.name}</h3>
                   <p className="text-gray-400 text-sm mb-4">Handcrafted artwork with natural silk and dyes</p>
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-2xl font-bold text-primary-400">$550</span>
                       <span className="text-gray-500 line-through ml-2">$600</span>
                     </div>
-                    <button className="btn-secondary text-sm px-4 py-2">View Details</button>
+                    <Link to="/shop" className="btn-secondary text-sm px-4 py-2">View Details</Link>
                   </div>
                 </div>
               </motion.div>
@@ -507,8 +522,8 @@ const Landing = () => {
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
               <Link to="/" className="flex items-center space-x-2 mb-4">
-                <Gem className="w-8 h-8 text-primary-400" />
-                <span className="text-2xl font-serif font-bold gold-text">SAFIRA</span>
+                <img src="/logo.png" alt="Safira" className="w-10 h-10 object-contain" />
+                <span className="text-2xl font-luxury font-semibold tracking-wider gold-text">SAFIRALUX</span>
               </Link>
               <p className="text-gray-400 text-sm">
                 Authentic Persian Pateh art investment platform. Transform $100 into lasting value.

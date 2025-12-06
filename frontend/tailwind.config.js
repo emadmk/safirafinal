@@ -36,6 +36,7 @@ export default {
       fontFamily: {
         serif: ['Georgia', 'Cambria', 'serif'],
         sans: ['Inter', 'system-ui', 'sans-serif'],
+        luxury: ['Cinzel', 'Georgia', 'serif'],
       },
       backgroundImage: {
         'gradient-gold': 'linear-gradient(135deg, #d4af37 0%, #f4e5b0 50%, #d4af37 100%)',
