@@ -12,7 +12,8 @@ import {
   Menu,
   X,
   ChevronRight,
-  Home
+  Home,
+  UserCheck
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 
@@ -23,6 +24,7 @@ const menuItems = [
   { path: '/admin/users', icon: Users, label: 'Users' },
   { path: '/admin/tickets', icon: MessageSquare, label: 'Tickets' },
   { path: '/admin/payments', icon: CreditCard, label: 'Payments' },
+  { path: '/admin/sellers', icon: UserCheck, label: 'Sellers' },
   { path: '/admin/tracking', icon: BarChart2, label: 'Analytics' },
 ]
 

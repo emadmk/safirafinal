@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
 import { verifyIPNSignature, mapPaymentStatus } from '@/lib/nowpayment';
 import { sendEmail, emailTemplates } from '@/lib/email';
+import { sendConversionToMicroinfluencer } from '@/lib/tracking';
 
 type PaymentStatus =
   | 'PENDING'
@@ -100,6 +101,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           } catch (emailError) {
             console.error('Failed to send payment confirmation email:', emailError);
           }
+
+          // Send conversion to microinfluencer platform
+          // Check if user came from an influencer
+          const trackingEvent = await prisma.trackingEvent.findFirst({
+            where: {
+              userId: investment.userId,
+              utmSource: { not: null },
+            },
+            orderBy: { createdAt: 'desc' },
+          });
+
+          if (trackingEvent?.utmSource) {
+            await sendConversionToMicroinfluencer({
+              conversionType: 'INVESTMENT',
+              conversionId: investment.id,
+              referralCode: trackingEvent.utmSource,
+              customerId: investment.userId,
+              customerEmail: investment.user.email,
+              amount: investment.userInvestment,
+              commission: 40, // $40 per conversion
+            });
+          }
         }
 
         await prisma.investment.update({
@@ -162,6 +185,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             });
           } catch (emailError) {
             console.error('Failed to send sale completion email:', emailError);
+          }
+
+          // Send purchase conversion to microinfluencer platform
+          if (sale.referralCode) {
+            await sendConversionToMicroinfluencer({
+              conversionType: 'PURCHASE',
+              conversionId: sale.id,
+              referralCode: sale.referralCode,
+              customerId: sale.buyerEmail || 'anonymous',
+              customerEmail: sale.buyerEmail || undefined,
+              amount: sale.amount,
+              commission: 40, // $40 per conversion
+            });
           }
         }
       }

@@ -252,6 +252,139 @@ export const getAnalyticsByReferralCode = async (referralCode: string, startDate
   };
 };
 
+// Send conversion data to microinfluencer platform
+export const sendConversionToMicroinfluencer = async (params: {
+  conversionType: 'INVESTMENT' | 'PURCHASE';
+  conversionId: string;
+  referralCode: string;
+  customerId: string;
+  customerEmail?: string;
+  amount: number;
+  commission: number;
+}) => {
+  const apiUrl = process.env.MICROINFLUENCER_API_URL;
+  const apiKey = process.env.MICROINFLUENCER_API_KEY;
+
+  if (!apiUrl || !apiKey || !params.referralCode) return;
+
+  try {
+    await axios.post(
+      `${apiUrl}/webhooks/safira-conversion`,
+      {
+        conversion_type: params.conversionType,
+        conversion_id: params.conversionId,
+        referral_code: params.referralCode,
+        timestamp: new Date().toISOString(),
+        customer: {
+          id: params.customerId,
+          email_hash: params.customerEmail ?
+            require('crypto').createHash('sha256').update(params.customerEmail).digest('hex') : null,
+          is_new: true,
+        },
+        transaction: {
+          amount: params.amount,
+          currency: 'USD',
+          commission: params.commission,
+          commission_rate: 25,
+        },
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 5000,
+      }
+    );
+  } catch (error) {
+    console.error('Failed to send conversion to microinfluencer platform:', error);
+  }
+};
+
+// Send daily stats to microinfluencer platform (called by cron job)
+export const sendDailyStatsToMicroinfluencer = async () => {
+  const apiUrl = process.env.MICROINFLUENCER_API_URL;
+  const apiKey = process.env.MICROINFLUENCER_API_KEY;
+
+  if (!apiUrl || !apiKey) return;
+
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  yesterday.setHours(0, 0, 0, 0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  try {
+    // Get all unique sources from yesterday
+    const sources = await prisma.trackingEvent.groupBy({
+      by: ['utmSource'],
+      where: {
+        createdAt: { gte: yesterday, lt: today },
+        utmSource: { not: null },
+      },
+    });
+
+    const sellers = await Promise.all(
+      sources.map(async (s: any) => {
+        const where = {
+          utmSource: s.utmSource,
+          createdAt: { gte: yesterday, lt: today },
+        };
+
+        const [visits, signups, investments, purchases] = await Promise.all([
+          prisma.trackingEvent.count({ where: { ...where, eventType: 'PAGE_VIEW' } }),
+          prisma.trackingEvent.count({ where: { ...where, eventType: 'SIGNUP' } }),
+          prisma.trackingEvent.count({ where: { ...where, eventType: 'INVESTMENT' } }),
+          prisma.trackingEvent.count({ where: { ...where, eventType: 'PURCHASE' } }),
+        ]);
+
+        const uniqueVisitors = await prisma.trackingEvent.findMany({
+          where,
+          distinct: ['visitorId'],
+          select: { visitorId: true },
+        });
+
+        return {
+          referral_code: s.utmSource,
+          visits,
+          unique_visitors: uniqueVisitors.length,
+          signups,
+          investments,
+          purchases,
+          revenue: (investments + purchases) * 100,
+          commission_earned: (investments + purchases) * 40,
+        };
+      })
+    );
+
+    await axios.post(
+      `${apiUrl}/webhooks/safira-daily-stats`,
+      {
+        date: yesterday.toISOString().split('T')[0],
+        sellers,
+        totals: {
+          total_visits: sellers.reduce((sum, s) => sum + s.visits, 0),
+          total_unique_visitors: sellers.reduce((sum, s) => sum + s.unique_visitors, 0),
+          total_signups: sellers.reduce((sum, s) => sum + s.signups, 0),
+          total_conversions: sellers.reduce((sum, s) => sum + s.investments + s.purchases, 0),
+          total_revenue: sellers.reduce((sum, s) => sum + s.revenue, 0),
+          total_commission: sellers.reduce((sum, s) => sum + s.commission_earned, 0),
+        },
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 10000,
+      }
+    );
+  } catch (error) {
+    console.error('Failed to send daily stats to microinfluencer platform:', error);
+  }
+};
+
 export default {
   trackEvent,
   parseUserAgent,
@@ -260,4 +393,6 @@ export default {
   generateVisitorId,
   getAnalyticsByReferralCode,
   sendToMicroinfluencerPlatform,
+  sendConversionToMicroinfluencer,
+  sendDailyStatsToMicroinfluencer,
 };
