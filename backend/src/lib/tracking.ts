@@ -140,36 +140,52 @@ export const sendToMicroinfluencerPlatform = async (event: any) => {
   const apiUrl = process.env.MICROINFLUENCER_API_URL;
   const apiKey = process.env.MICROINFLUENCER_API_KEY;
 
-  if (!apiUrl || !apiKey) return;
+  if (!apiUrl || !apiKey) {
+    console.log('[MicroInfluencer] Missing API URL or Key, skipping webhook');
+    return;
+  }
+
+  // Use utmSource as referral_code (they should be the same: INF_XXXX)
+  const referralCode = event.utmSource || event.referralCode;
+
+  if (!referralCode) {
+    console.log('[MicroInfluencer] No referral code found, skipping webhook');
+    return;
+  }
+
+  const payload = {
+    event_type: event.eventType,
+    event_id: event.id, // Required by MicroInfluencer API
+    referral_code: referralCode,
+    timestamp: event.createdAt?.toISOString() || new Date().toISOString(),
+    utm_source: event.utmSource,
+    utm_medium: event.utmMedium,
+    utm_campaign: event.utmCampaign,
+    utm_content: event.utmContent,
+    visitor_id: event.visitorId,
+    user_id: event.userId,
+    session_id: event.sessionId,
+    device_type: event.deviceType,
+    browser: event.browser,
+    browser_version: event.browserVersion,
+    os: event.os,
+    os_version: event.osVersion,
+    page_url: event.pageUrl,
+    page_title: event.pageTitle,
+    session_duration: event.sessionDuration,
+    scroll_depth: event.scrollDepth,
+  };
+
+  console.log('[MicroInfluencer] Sending tracking event:', {
+    url: `${apiUrl}/webhooks/safira-tracking`,
+    referral_code: referralCode,
+    event_type: event.eventType,
+  });
 
   try {
-    await axios.post(
+    const response = await axios.post(
       `${apiUrl}/webhooks/safira-tracking`,
-      {
-        event_type: event.eventType,
-        event_data: event.eventData,
-        utm_source: event.utmSource,
-        utm_medium: event.utmMedium,
-        utm_campaign: event.utmCampaign,
-        utm_content: event.utmContent,
-        utm_term: event.utmTerm,
-        referral_code: event.referralCode,
-        visitor_id: event.visitorId,
-        user_id: event.userId,
-        device_type: event.deviceType,
-        browser: event.browser,
-        browser_version: event.browserVersion,
-        os: event.os,
-        os_version: event.osVersion,
-        page_url: event.pageUrl,
-        page_title: event.pageTitle,
-        session_id: event.sessionId,
-        session_duration: event.sessionDuration,
-        scroll_depth: event.scrollDepth,
-        country: event.country,
-        city: event.city,
-        timestamp: event.createdAt,
-      },
+      payload,
       {
         headers: {
           'Authorization': `Bearer ${apiKey}`,
@@ -178,8 +194,9 @@ export const sendToMicroinfluencerPlatform = async (event: any) => {
         timeout: 5000,
       }
     );
-  } catch (error) {
-    console.error('Failed to send tracking data to microinfluencer platform:', error);
+    console.log('[MicroInfluencer] Webhook response:', response.data);
+  } catch (error: any) {
+    console.error('[MicroInfluencer] Failed to send tracking:', error.response?.data || error.message);
   }
 };
 
