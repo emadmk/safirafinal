@@ -64,12 +64,12 @@ const PaymentReminderPopup = ({ investments }: PaymentReminderPopupProps) => {
 
           {/* Popup */}
           <motion.div
-            className="fixed inset-x-4 top-1/2 -translate-y-1/2 max-w-md mx-auto z-50"
+            className="fixed left-4 right-4 top-1/2 -translate-y-1/2 max-w-md mx-auto z-50 max-h-[90vh] overflow-y-auto"
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
           >
-            <div className="bg-dark-800 border border-primary-400/30 rounded-2xl p-6 shadow-2xl">
+            <div className="bg-dark-800 border border-primary-400/30 rounded-2xl p-4 sm:p-6 shadow-2xl">
               {/* Close button */}
               <button
                 onClick={handleDismiss}
@@ -79,28 +79,28 @@ const PaymentReminderPopup = ({ investments }: PaymentReminderPopupProps) => {
               </button>
 
               {/* Icon */}
-              <div className="w-16 h-16 rounded-full bg-primary-400/20 flex items-center justify-center mx-auto mb-4">
-                <AlertCircle className="w-8 h-8 text-primary-400" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-primary-400/20 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <AlertCircle className="w-6 h-6 sm:w-8 sm:h-8 text-primary-400" />
               </div>
 
               {/* Content */}
-              <h3 className="text-xl font-bold text-white text-center mb-2">
+              <h3 className="text-lg sm:text-xl font-bold text-white text-center mb-2">
                 Complete Your Payment
               </h3>
-              <p className="text-gray-400 text-center mb-6">
+              <p className="text-gray-400 text-center mb-4 sm:mb-6 text-sm sm:text-base">
                 You have {pendingInvestments.length} pending investment{pendingInvestments.length > 1 ? 's' : ''} waiting for payment.
                 Complete your payment to start production!
               </p>
 
               {/* Investment Summary */}
-              <div className="bg-dark-700/50 rounded-xl p-4 mb-6">
-                <div className="flex items-center justify-between mb-2">
+              <div className="bg-dark-700/50 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6">
+                <div className="flex items-center justify-between mb-2 text-sm sm:text-base">
                   <span className="text-gray-400">Total Pending</span>
                   <span className="text-primary-400 font-bold">
                     ${pendingInvestments.reduce((sum, inv) => sum + inv.userInvestment, 0)}
                   </span>
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between text-sm sm:text-base">
                   <span className="text-gray-400">Potential Value</span>
                   <span className="text-white font-bold">
                     ${pendingInvestments.reduce((sum, inv) => sum + inv.productValue, 0)}

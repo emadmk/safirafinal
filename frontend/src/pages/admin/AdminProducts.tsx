@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Package, Plus, Edit, Trash2, X } from 'lucide-react'
+import { Package, Plus, Edit, Trash2, X, Upload } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import api from '../../lib/api'
@@ -22,6 +22,9 @@ const AdminProducts = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [images, setImages] = useState<string[]>([])
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { register, handleSubmit, reset, setValue } = useForm<ProductForm>()
 
@@ -39,6 +42,48 @@ const AdminProducts = () => {
     setIsLoading(false)
   }
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file')
+      return
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Image size must be less than 10MB')
+      return
+    }
+
+    setUploadingImage(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await api.post('/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+
+      if (response.data.url) {
+        setImages([...images, response.data.url])
+        toast.success('Image uploaded!')
+      }
+    } catch (error) {
+      toast.error('Failed to upload image')
+    }
+    setUploadingImage(false)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  const removeImage = (index: number) => {
+    setImages(images.filter((_, i) => i !== index))
+  }
+
   const openModal = (product?: Product) => {
     if (product) {
       setEditingProduct(product)
@@ -50,6 +95,7 @@ const AdminProducts = () => {
       setValue('dimensions', product.dimensions || '')
       setValue('isAvailable', product.isAvailable)
       setValue('isFeatured', product.isFeatured)
+      setImages(product.images || [])
     } else {
       setEditingProduct(null)
       reset({
@@ -62,20 +108,23 @@ const AdminProducts = () => {
         isAvailable: true,
         isFeatured: false,
       })
+      setImages([])
     }
     setShowModal(true)
   }
 
   const saveProduct = async (data: ProductForm) => {
     try {
+      const productData = { ...data, images }
       if (editingProduct) {
-        await api.patch(`/admin/products/${editingProduct.id}`, data)
+        await api.patch(`/admin/products/${editingProduct.id}`, productData)
         toast.success('Product updated!')
       } else {
-        await api.post('/admin/products', { ...data, images: [] })
+        await api.post('/admin/products', productData)
         toast.success('Product created!')
       }
       setShowModal(false)
+      setImages([])
       fetchProducts()
     } catch {
       toast.error('Failed to save product')
@@ -170,6 +219,46 @@ const AdminProducts = () => {
               </button>
             </div>
             <form onSubmit={handleSubmit(saveProduct)} className="space-y-4">
+              {/* Image Upload */}
+              <div>
+                <label className="label">Product Images</label>
+                <div className="grid grid-cols-3 gap-3 mb-3">
+                  {images.map((img, index) => (
+                    <div key={index} className="relative aspect-square rounded-lg overflow-hidden bg-dark-700">
+                      <img src={img} alt="" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  {images.length < 5 && (
+                    <label className="aspect-square rounded-lg border-2 border-dashed border-gray-600 hover:border-primary-400 flex flex-col items-center justify-center cursor-pointer transition-colors">
+                      {uploadingImage ? (
+                        <div className="animate-spin w-6 h-6 border-2 border-primary-400 border-t-transparent rounded-full" />
+                      ) : (
+                        <>
+                          <Upload className="w-6 h-6 text-gray-400 mb-1" />
+                          <span className="text-xs text-gray-400">Upload</span>
+                        </>
+                      )}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleImageUpload}
+                        disabled={uploadingImage}
+                      />
+                    </label>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500">Max 5 images, 10MB each. JPG, PNG, WebP</p>
+              </div>
+
               <div>
                 <label className="label">Name</label>
                 <input type="text" className="input" {...register('name', { required: true })} />

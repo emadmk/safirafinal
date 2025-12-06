@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
-  Gem,
   LayoutDashboard,
   TrendingUp,
   Package,
@@ -44,8 +43,8 @@ const AdminLayout = () => {
       <header className="lg:hidden fixed top-0 left-0 right-0 z-50 glass border-b border-primary-400/10">
         <div className="flex items-center justify-between px-4 h-16">
           <Link to="/admin" className="flex items-center space-x-2">
-            <Gem className="w-8 h-8 text-primary-400" />
-            <span className="text-xl font-serif font-bold gold-text">ADMIN</span>
+            <img src="/logo.png" alt="Safira" className="w-8 h-8 object-contain" />
+            <span className="text-lg font-luxury font-semibold tracking-wider gold-text">ADMIN</span>
           </Link>
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -64,9 +63,11 @@ const AdminLayout = () => {
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="hidden lg:flex items-center space-x-2 px-6 h-20 border-b border-primary-400/10">
-            <Gem className="w-8 h-8 text-primary-400" />
-            <span className="text-xl font-serif font-bold gold-text">ADMIN</span>
+          <div className="hidden lg:flex items-center px-6 h-20 border-b border-primary-400/10">
+            <Link to="/" className="flex items-center space-x-2">
+              <img src="/logo.png" alt="Safira" className="w-10 h-10 object-contain" />
+              <span className="text-xl font-luxury font-semibold tracking-wider gold-text">ADMIN</span>
+            </Link>
           </div>
 
           {/* User Info */}
