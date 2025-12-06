@@ -8,7 +8,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
-    const { page = '1', limit = '20', status, priority } = req.query;
+    const { page = '1', limit = '20', status, priority, unread } = req.query;
 
     const pageNum = parseInt(page as string);
     const limitNum = parseInt(limit as string);
@@ -22,7 +22,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       where.priority = priority;
     }
 
-    const [tickets, total] = await Promise.all([
+    const [tickets, total, unreadCount] = await Promise.all([
       prisma.ticket.findMany({
         where,
         include: {
@@ -43,10 +43,28 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         take: limitNum,
       }),
       prisma.ticket.count({ where }),
+      // Count unread tickets (no admin reply yet)
+      prisma.ticket.count({
+        where: {
+          status: { in: ['OPEN', 'IN_PROGRESS'] },
+          replies: {
+            none: {
+              isAdminReply: true,
+            },
+          },
+        },
+      }),
     ]);
 
+    // Add isUnread flag to each ticket
+    const ticketsWithUnread = tickets.map(ticket => ({
+      ...ticket,
+      isUnread: !ticket.replies.some((reply: any) => reply.isAdminReply),
+    }));
+
     res.json({
-      tickets,
+      tickets: ticketsWithUnread,
+      unreadCount,
       pagination: {
         page: pageNum,
         limit: limitNum,

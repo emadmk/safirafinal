@@ -15,6 +15,7 @@ import toast from 'react-hot-toast'
 import api from '../lib/api'
 import { useAuthStore } from '../store/authStore'
 import { Investment } from '../types'
+import PaymentReminderPopup from '../components/PaymentReminderPopup'
 
 const Dashboard = () => {
   const [searchParams] = useSearchParams()
@@ -56,6 +57,9 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-8">
+      {/* Payment Reminder Popup */}
+      <PaymentReminderPopup investments={investments} />
+
       {/* Welcome Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between">
         <div>

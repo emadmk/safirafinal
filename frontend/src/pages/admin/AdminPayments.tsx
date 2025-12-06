@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { Clock, CheckCircle, XCircle, AlertCircle, User, DollarSign, ArrowRight } from 'lucide-react'
 import { format } from 'date-fns'
 import toast from 'react-hot-toast'
 import api from '../../lib/api'
 
 const AdminPayments = () => {
   const [logs, setLogs] = useState<any[]>([])
+  const [pendingInvestments, setPendingInvestments] = useState<any[]>([])
   const [stats, setStats] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('')
+  const [activeTab, setActiveTab] = useState<'pending' | 'logs'>('pending')
 
   useEffect(() => {
     fetchPayments()
@@ -20,6 +23,7 @@ const AdminPayments = () => {
       const params = statusFilter ? `?status=${statusFilter}` : ''
       const response = await api.get(`/admin/payments${params}`)
       setLogs(response.data.logs)
+      setPendingInvestments(response.data.pendingInvestments || [])
       setStats(response.data.stats)
     } catch {
       toast.error('Failed to load payments')
@@ -42,7 +46,7 @@ const AdminPayments = () => {
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-white mb-2">Payments</h1>
-        <p className="text-gray-400">NowPayment transaction logs</p>
+        <p className="text-gray-400">Investment payments and transaction logs</p>
       </div>
 
       {/* Stats */}
@@ -69,54 +73,138 @@ const AdminPayments = () => {
         </div>
       )}
 
-      <div className="flex justify-end">
-        <select className="input w-auto" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-          <option value="">All Status</option>
-          <option value="waiting">Waiting</option>
-          <option value="confirming">Confirming</option>
-          <option value="finished">Finished</option>
-          <option value="failed">Failed</option>
-          <option value="expired">Expired</option>
-        </select>
+      {/* Tabs */}
+      <div className="flex space-x-4 border-b border-primary-400/20">
+        <button
+          onClick={() => setActiveTab('pending')}
+          className={`pb-3 px-4 font-medium transition-all ${
+            activeTab === 'pending'
+              ? 'text-primary-400 border-b-2 border-primary-400'
+              : 'text-gray-400 hover:text-white'
+          }`}
+        >
+          Pending Investments
+          {pendingInvestments.length > 0 && (
+            <span className="ml-2 px-2 py-0.5 text-xs bg-yellow-400/20 text-yellow-400 rounded-full">
+              {pendingInvestments.length}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab('logs')}
+          className={`pb-3 px-4 font-medium transition-all ${
+            activeTab === 'logs'
+              ? 'text-primary-400 border-b-2 border-primary-400'
+              : 'text-gray-400 hover:text-white'
+          }`}
+        >
+          Transaction Logs
+        </button>
       </div>
 
-      <motion.div className="card overflow-x-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <table className="w-full">
-          <thead>
-            <tr className="text-left text-gray-400 text-sm border-b border-primary-400/10">
-              <th className="pb-3">Status</th>
-              <th className="pb-3">Payment ID</th>
-              <th className="pb-3">Type</th>
-              <th className="pb-3">Order ID</th>
-              <th className="pb-3">Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              <tr><td colSpan={5} className="py-8 text-center text-gray-400">Loading...</td></tr>
-            ) : logs.length === 0 ? (
-              <tr><td colSpan={5} className="py-8 text-center text-gray-400">No payment logs</td></tr>
-            ) : (
-              logs.map((log) => (
-                <tr key={log.id} className="border-b border-primary-400/5">
-                  <td className="py-3">
-                    <div className="flex items-center space-x-2">
-                      {getStatusIcon(log.paymentStatus)}
-                      <span className="text-white capitalize">{log.paymentStatus}</span>
+      {/* Pending Investments Tab */}
+      {activeTab === 'pending' && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          {isLoading ? (
+            <div className="card animate-pulse h-32" />
+          ) : pendingInvestments.length === 0 ? (
+            <div className="card text-center py-12">
+              <CheckCircle className="w-16 h-16 text-green-400/30 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-white mb-2">All Caught Up!</h3>
+              <p className="text-gray-400">No pending payments awaiting confirmation</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {pendingInvestments.map((inv) => (
+                <div key={inv.id} className="card flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 rounded-lg bg-yellow-400/10 flex items-center justify-center">
+                      <User className="w-6 h-6 text-yellow-400" />
                     </div>
-                  </td>
-                  <td className="py-3">
-                    <code className="text-primary-400 text-sm">{log.nowPaymentId || '-'}</code>
-                  </td>
-                  <td className="py-3 text-gray-400 capitalize">{log.payType || '-'}</td>
-                  <td className="py-3 text-gray-400 text-sm">{log.relatedId || '-'}</td>
-                  <td className="py-3 text-gray-400">{format(new Date(log.createdAt), 'MMM dd, HH:mm')}</td>
+                    <div>
+                      <p className="text-white font-medium">
+                        {inv.user?.firstName} {inv.user?.lastName}
+                      </p>
+                      <p className="text-gray-400 text-sm">{inv.user?.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-6">
+                    <div className="text-right">
+                      <p className="text-primary-400 font-bold">${inv.userInvestment}</p>
+                      <p className="text-gray-500 text-sm">
+                        {format(new Date(inv.createdAt), 'MMM dd, HH:mm')}
+                      </p>
+                    </div>
+                    <span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-400/20 text-yellow-400">
+                      PENDING
+                    </span>
+                    <Link
+                      to={`/admin/investments`}
+                      className="text-primary-400 hover:text-primary-300"
+                    >
+                      <ArrowRight className="w-5 h-5" />
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </motion.div>
+      )}
+
+      {/* Transaction Logs Tab */}
+      {activeTab === 'logs' && (
+        <>
+          <div className="flex justify-end">
+            <select className="input w-auto" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+              <option value="">All Status</option>
+              <option value="waiting">Waiting</option>
+              <option value="confirming">Confirming</option>
+              <option value="finished">Finished</option>
+              <option value="failed">Failed</option>
+              <option value="expired">Expired</option>
+            </select>
+          </div>
+
+          <motion.div className="card overflow-x-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <table className="w-full">
+              <thead>
+                <tr className="text-left text-gray-400 text-sm border-b border-primary-400/10">
+                  <th className="pb-3">Status</th>
+                  <th className="pb-3">Payment ID</th>
+                  <th className="pb-3">Type</th>
+                  <th className="pb-3">Order ID</th>
+                  <th className="pb-3">Date</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </motion.div>
+              </thead>
+              <tbody>
+                {isLoading ? (
+                  <tr><td colSpan={5} className="py-8 text-center text-gray-400">Loading...</td></tr>
+                ) : logs.length === 0 ? (
+                  <tr><td colSpan={5} className="py-8 text-center text-gray-400">No payment logs</td></tr>
+                ) : (
+                  logs.map((log) => (
+                    <tr key={log.id} className="border-b border-primary-400/5">
+                      <td className="py-3">
+                        <div className="flex items-center space-x-2">
+                          {getStatusIcon(log.paymentStatus)}
+                          <span className="text-white capitalize">{log.paymentStatus}</span>
+                        </div>
+                      </td>
+                      <td className="py-3">
+                        <code className="text-primary-400 text-sm">{log.nowPaymentId || '-'}</code>
+                      </td>
+                      <td className="py-3 text-gray-400 capitalize">{log.payType || '-'}</td>
+                      <td className="py-3 text-gray-400 text-sm">{log.relatedId || '-'}</td>
+                      <td className="py-3 text-gray-400">{format(new Date(log.createdAt), 'MMM dd, HH:mm')}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </motion.div>
+        </>
+      )}
     </div>
   )
 }

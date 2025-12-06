@@ -14,6 +14,18 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const limitNum = parseInt(limit as string);
     const skip = (pageNum - 1) * limitNum;
 
+    // Get pending investments (from Investment table - actual pending payments)
+    const pendingInvestments = await prisma.investment.findMany({
+      where: { paymentStatus: 'PENDING' },
+      include: {
+        user: {
+          select: { id: true, email: true, firstName: true, lastName: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Payment logs from NowPayment callbacks
     const where: any = {};
     if (status) {
       where.paymentStatus = status;
@@ -32,29 +44,30 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       prisma.paymentLog.count({ where }),
     ]);
 
-    // Get payment stats
+    // Get payment stats from Investment table (actual payment status)
     const [
-      totalPending,
-      totalConfirming,
-      totalFinished,
-      totalFailed,
-      totalExpired,
+      investmentPending,
+      investmentConfirming,
+      investmentFinished,
+      investmentFailed,
+      investmentExpired,
     ] = await Promise.all([
-      prisma.paymentLog.count({ where: { paymentStatus: 'waiting' } }),
-      prisma.paymentLog.count({ where: { paymentStatus: 'confirming' } }),
-      prisma.paymentLog.count({ where: { paymentStatus: 'finished' } }),
-      prisma.paymentLog.count({ where: { paymentStatus: 'failed' } }),
-      prisma.paymentLog.count({ where: { paymentStatus: 'expired' } }),
+      prisma.investment.count({ where: { paymentStatus: 'PENDING' } }),
+      prisma.investment.count({ where: { paymentStatus: 'CONFIRMING' } }),
+      prisma.investment.count({ where: { paymentStatus: 'FINISHED' } }),
+      prisma.investment.count({ where: { paymentStatus: 'FAILED' } }),
+      prisma.investment.count({ where: { paymentStatus: 'EXPIRED' } }),
     ]);
 
     res.json({
       logs,
+      pendingInvestments,
       stats: {
-        pending: totalPending,
-        confirming: totalConfirming,
-        finished: totalFinished,
-        failed: totalFailed,
-        expired: totalExpired,
+        pending: investmentPending,
+        confirming: investmentConfirming,
+        finished: investmentFinished,
+        failed: investmentFailed,
+        expired: investmentExpired,
       },
       pagination: {
         page: pageNum,
