@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Clock, CheckCircle, XCircle, AlertCircle, User, DollarSign, ArrowRight } from 'lucide-react'
+import { Clock, CheckCircle, XCircle, AlertCircle, User, ArrowRight } from 'lucide-react'
 import { format } from 'date-fns'
 import toast from 'react-hot-toast'
 import api from '../../lib/api'
