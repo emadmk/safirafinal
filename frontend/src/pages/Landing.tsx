@@ -27,10 +27,10 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-dark-900">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass">
+      <nav className="fixed top-0 left-0 right-0 z-50 glass overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 md:h-20">
-            <Link to="/" className="flex items-center space-x-2">
+          <div className="flex items-center justify-between h-16 md:h-20 overflow-hidden">
+            <Link to="/" className="flex items-center space-x-2 flex-shrink-0">
               <Gem className="w-8 h-8 text-primary-400" />
               <span className="text-xl md:text-2xl font-serif font-bold gold-text">SAFIRA</span>
             </Link>
@@ -55,9 +55,9 @@ const Landing = () => {
               )}
             </div>
             {user ? (
-              <Link to="/dashboard" className="md:hidden btn-primary text-sm px-4 py-2">Dashboard</Link>
+              <Link to="/dashboard" className="md:hidden btn-primary text-sm px-3 py-2 whitespace-nowrap flex-shrink-0">Dashboard</Link>
             ) : (
-              <Link to="/invest" className="md:hidden btn-primary text-sm px-4 py-2">Invest</Link>
+              <Link to="/invest" className="md:hidden btn-primary text-sm px-4 py-2 whitespace-nowrap flex-shrink-0">Invest</Link>
             )}
           </div>
         </div>
