@@ -11,11 +11,15 @@ import {
   CheckCircle,
   Users,
   Gem,
-  Award
+  Award,
+  LogOut
 } from 'lucide-react'
 import { initTracking } from '../lib/tracking'
+import { useAuthStore } from '../store/authStore'
 
 const Landing = () => {
+  const { user, logout } = useAuthStore()
+
   useEffect(() => {
     initTracking()
   }, [])
@@ -34,10 +38,27 @@ const Landing = () => {
               <a href="#how-it-works" className="text-gray-300 hover:text-primary-400 transition-colors">How It Works</a>
               <a href="#benefits" className="text-gray-300 hover:text-primary-400 transition-colors">Benefits</a>
               <a href="#shop" className="text-gray-300 hover:text-primary-400 transition-colors">Shop</a>
-              <Link to="/login" className="text-primary-400 hover:text-primary-300 transition-colors">Login</Link>
-              <Link to="/invest" className="btn-primary text-sm">Start Investing</Link>
+              {user ? (
+                <>
+                  <span className="text-gray-300">Hello, <span className="text-primary-400 font-medium">{user.firstName}</span></span>
+                  <Link to="/dashboard" className="text-primary-400 hover:text-primary-300 transition-colors">Dashboard</Link>
+                  <button onClick={logout} className="flex items-center text-gray-400 hover:text-red-400 transition-colors">
+                    <LogOut className="w-4 h-4 mr-1" />
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login" className="text-primary-400 hover:text-primary-300 transition-colors">Login</Link>
+                  <Link to="/invest" className="btn-primary text-sm">Start Investing</Link>
+                </>
+              )}
             </div>
-            <Link to="/invest" className="md:hidden btn-primary text-sm px-4 py-2">Invest</Link>
+            {user ? (
+              <Link to="/dashboard" className="md:hidden btn-primary text-sm px-4 py-2">Dashboard</Link>
+            ) : (
+              <Link to="/invest" className="md:hidden btn-primary text-sm px-4 py-2">Invest</Link>
+            )}
           </div>
         </div>
       </nav>
