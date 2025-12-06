@@ -21,6 +21,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       soldProducts,
       totalProducts,
       openTickets,
+      pageViews,
+      loginClicks,
+      paymentClicks,
     ] = await Promise.all([
       prisma.user.count({ where: { role: 'USER' } }),
       prisma.investment.count(),
@@ -37,6 +40,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       }),
       prisma.product.count(),
       prisma.ticket.count({ where: { status: 'OPEN' } }),
+      prisma.trackingEvent.count({ where: { eventType: 'PAGE_VIEW' } }),
+      prisma.trackingEvent.count({ where: { eventType: 'LOGIN_CLICK' } }),
+      prisma.trackingEvent.count({ where: { eventType: 'PAYMENT_CLICK' } }),
     ]);
 
     // Get total revenue
@@ -72,7 +78,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       take: 10,
     });
 
-    // Get tracking stats by source
+    // Get tracking stats by source (sellers/affiliates)
     const trackingBySource = await prisma.trackingEvent.groupBy({
       by: ['utmSource'],
       _count: true,
@@ -80,6 +86,38 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       orderBy: { _count: { utmSource: 'desc' } },
       take: 10,
     });
+
+    // Get sellers (users with referral traffic)
+    const sellersData = await prisma.trackingEvent.groupBy({
+      by: ['utmSource'],
+      _count: { _all: true },
+      where: {
+        utmSource: { not: null },
+      },
+      orderBy: { _count: { _all: 'desc' } },
+      take: 10,
+    });
+
+    // Get sales count per referral code
+    const salesByRef = await prisma.sale.groupBy({
+      by: ['referralCode'],
+      _count: { _all: true },
+      where: {
+        referralCode: { not: null },
+        paymentStatus: 'FINISHED',
+      },
+    });
+
+    const salesMap = new Map(salesByRef.map(s => [s.referralCode, s._count._all]));
+
+    const sellers = sellersData.map(s => ({
+      referralCode: s.utmSource,
+      name: s.utmSource,
+      visits: s._count._all,
+      sales: salesMap.get(s.utmSource) || 0,
+    }));
+
+    const totalSellers = sellersData.length;
 
     res.json({
       stats: {
@@ -102,9 +140,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         openTickets,
         totalRevenue,
         investmentsThisMonth,
+        pageViews,
+        loginClicks,
+        paymentClicks,
+        totalSellers,
       },
       recentInvestments,
       recentPaymentLogs,
+      sellers,
       trackingBySource: trackingBySource.map((t) => ({
         source: t.utmSource,
         count: t._count,

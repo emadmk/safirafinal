@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { motion } from 'framer-motion'
-import { Gem, Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react'
+import { Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAuthStore } from '../store/authStore'
 
@@ -44,8 +44,8 @@ const Login = () => {
         <div className="card p-8">
           <div className="text-center mb-8">
             <Link to="/" className="inline-flex items-center space-x-2 mb-6">
-              <Gem className="w-10 h-10 text-primary-400" />
-              <span className="text-3xl font-serif font-bold gold-text">SAFIRA</span>
+              <img src="/logo.png" alt="Safira" className="w-12 h-12 object-contain" />
+              <span className="text-3xl font-luxury font-semibold tracking-wider gold-text">SAFIRALUX</span>
             </Link>
             <h1 className="text-2xl font-bold text-white mb-2">Welcome Back</h1>
             <p className="text-gray-400">Sign in to your investment account</p>
